@@ -15,6 +15,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLoggerSetMetadata(t *testing.T) {
+	logger := New()
+	assert.Equal(t, map[string]interface{}{}, logger.metadata)
+	meta := map[string]interface{}{"new": "meta"}
+	logger.SetMetadata(meta)
+	assert.Equal(t, meta, logger.metadata)
+}
+
 func TestNew(t *testing.T) {
 	logger := New(
 		FlattenMetadata(true),

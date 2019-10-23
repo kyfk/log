@@ -30,7 +30,7 @@ type Logger struct {
 }
 
 // New initialize new Logger with options.
-func New(ops ...Option) Logger {
+func New(ops ...Option) *Logger {
 	lg := Logger{
 		level:     level.Debug,
 		logger:    log.New(os.Stdout, "", 0),
@@ -42,11 +42,16 @@ func New(ops ...Option) Logger {
 	for _, o := range ops {
 		lg = o(lg)
 	}
-	return lg
+	return &lg
+}
+
+// SetMetadata sets a metadata to a logger.
+func (l *Logger) SetMetadata(meta map[string]interface{}) {
+	l.metadata = meta
 }
 
 // Debug logs a message at level Debug.
-func (l Logger) Debug(v ...interface{}) {
+func (l *Logger) Debug(v ...interface{}) {
 	if level.Debug.LessThan(l.level) || len(v) == 0 {
 		return
 	}
@@ -58,7 +63,7 @@ func (l Logger) Debug(v ...interface{}) {
 }
 
 // Info logs a message at level Info.
-func (l Logger) Info(v ...interface{}) {
+func (l *Logger) Info(v ...interface{}) {
 	if level.Info.LessThan(l.level) || len(v) == 0 {
 		return
 	}
@@ -70,7 +75,7 @@ func (l Logger) Info(v ...interface{}) {
 }
 
 // Warn logs a message at level Warn.
-func (l Logger) Warn(v ...interface{}) {
+func (l *Logger) Warn(v ...interface{}) {
 	if level.Warn.LessThan(l.level) || len(v) == 0 {
 		return
 	}
@@ -99,7 +104,7 @@ func (l Logger) Warn(v ...interface{}) {
 }
 
 // Error logs a message at level Error.
-func (l Logger) Error(err error) {
+func (l *Logger) Error(err error) {
 	if level.Error.LessThan(l.level) || err == nil {
 		return
 	}
@@ -124,7 +129,7 @@ func (l Logger) Error(err error) {
 	l.println(data)
 }
 
-func (l Logger) println(v map[string]interface{}) {
+func (l *Logger) println(v map[string]interface{}) {
 	var data map[string]interface{}
 	if l.flattenMetadata && !l.isMergeFailed {
 		var err error
