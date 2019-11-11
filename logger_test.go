@@ -82,6 +82,46 @@ func TestDebug(t *testing.T) {
 	})
 }
 
+func TestDebugf(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("if minimum level is Debug", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Debug),
+			Format(format.JSONPretty),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+
+		t.Run("output messages correctly", func(t *testing.T) {
+			logger.Debugf("formatted: %s", "debug")
+			assert.Equal(`{
+  "level": "DEBUG",
+  "message": "formatted: debug",
+  "meta": {},
+  "time": "0001-01-01T00:00:00Z"
+}
+`, buf.String())
+		})
+
+		buf.Reset()
+
+	})
+
+	t.Run("if minimum level is lower than Info, output nothing", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Info),
+			Format(format.JSON),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+		logger.Debugf("formatted: %s", "debug")
+		assert.Empty(buf.String())
+	})
+}
+
 func TestInfo(t *testing.T) {
 	assert := assert.New(t)
 
@@ -127,6 +167,45 @@ func TestInfo(t *testing.T) {
 	})
 }
 
+func TestInfof(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("if minimum level is Info", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Info),
+			Format(format.JSONPretty),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+
+		t.Run("output messages correctly", func(t *testing.T) {
+			logger.Infof("formatted: %s", "info")
+			assert.Equal(`{
+  "level": "INFO",
+  "message": "formatted: info",
+  "meta": {},
+  "time": "0001-01-01T00:00:00Z"
+}
+`, buf.String())
+		})
+
+		buf.Reset()
+	})
+
+	t.Run("if minimum level is lower than Info, output nothing", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Warn),
+			Format(format.JSON),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+		logger.Infof("formatted: %s", "info")
+		assert.Empty(buf.String())
+	})
+}
+
 func TestWarn(t *testing.T) {
 	assert := assert.New(t)
 
@@ -167,6 +246,44 @@ func TestWarn(t *testing.T) {
 		)
 		logger.nowFunc = func() time.Time { return time.Time{} }
 		logger.Warn("warn")
+		assert.Empty(buf.String())
+	})
+}
+
+func TestWarnf(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("if minimum level is Warn", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Warn),
+			Format(format.JSONPretty),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+
+		t.Run("output messages correctly", func(t *testing.T) {
+			logger.Warnf("formatted: %s: %s", errors.New("error"), "warn")
+			var mp map[string]interface{}
+			assert.NoError(json.Unmarshal(buf.Bytes(), &mp))
+			assert.Equal("WARN", mp["level"])
+			assert.Equal("formatted: error: warn", mp["message"])
+			assert.Equal("0001-01-01T00:00:00Z", mp["time"])
+			assert.NotEmpty(mp["trace"])
+		})
+
+		buf.Reset()
+	})
+
+	t.Run("if minimum level is lower than Warn, output nothing", func(t *testing.T) {
+		buf := bytes.NewBuffer(nil)
+		logger := New(
+			MinLevel(level.Error),
+			Format(format.JSON),
+			Output(buf),
+		)
+		logger.nowFunc = func() time.Time { return time.Time{} }
+		logger.Warnf("warn")
 		assert.Empty(buf.String())
 	})
 }

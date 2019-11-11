@@ -62,6 +62,18 @@ func (l *Logger) Debug(v ...interface{}) {
 	})
 }
 
+// Debugf logs a formatted message at level Debug.
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	if level.Debug.LessThan(l.level) || len(v) == 0 {
+		return
+	}
+	l.println(map[string]interface{}{
+		"level":   level.Debug,
+		"message": fmt.Sprintf(format, v...),
+		"time":    l.nowFunc(),
+	})
+}
+
 // Info logs a message at level Info.
 func (l *Logger) Info(v ...interface{}) {
 	if level.Info.LessThan(l.level) || len(v) == 0 {
@@ -70,6 +82,18 @@ func (l *Logger) Info(v ...interface{}) {
 	l.println(map[string]interface{}{
 		"level":   level.Info,
 		"message": fmt.Sprint(v...),
+		"time":    l.nowFunc(),
+	})
+}
+
+// Infof logs a formatted message at level Info.
+func (l *Logger) Infof(format string, v ...interface{}) {
+	if level.Info.LessThan(l.level) || len(v) == 0 {
+		return
+	}
+	l.println(map[string]interface{}{
+		"level":   level.Info,
+		"message": fmt.Sprintf(format, v...),
 		"time":    l.nowFunc(),
 	})
 }
@@ -89,16 +113,41 @@ func (l *Logger) Warn(v ...interface{}) {
 	case interface{ StackTrace() errors.StackTrace }:
 		if !l.withoutTrace {
 			data["trace"] = v0.StackTrace()
-			data["message"] = fmt.Sprint(v[0:]...)
-		} else {
-			data["message"] = fmt.Sprint(v...)
 		}
 	default:
 		if !l.withoutTrace {
 			data["trace"] = callers().framesString()
 		}
-		data["message"] = fmt.Sprint(v...)
 	}
+
+	data["message"] = fmt.Sprint(v...)
+
+	l.println(data)
+}
+
+// Warn logs a formatted message at level Warn.
+func (l *Logger) Warnf(format string, v ...interface{}) {
+	if level.Warn.LessThan(l.level) || len(v) == 0 {
+		return
+	}
+
+	data := map[string]interface{}{
+		"level": level.Warn,
+		"time":  l.nowFunc(),
+	}
+
+	switch v0 := v[0].(type) {
+	case interface{ StackTrace() errors.StackTrace }:
+		if !l.withoutTrace {
+			data["trace"] = v0.StackTrace()
+		}
+	default:
+		if !l.withoutTrace {
+			data["trace"] = callers().framesString()
+		}
+	}
+
+	data["message"] = fmt.Sprintf(format, v...)
 
 	l.println(data)
 }
